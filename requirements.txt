@@ -1,0 +1,25 @@
+# Smart Wardrobe RAG — pinned dependencies
+# Install: pip install -r requirements.txt
+
+# Core ML / embeddings
+sentence-transformers==3.0.1
+faiss-cpu==1.8.0
+torch==2.3.1
+transformers==4.44.0
+huggingface-hub==0.24.6
+tokenizers==0.19.1
+
+# Data
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.1
+
+# LLM
+openai==1.40.0
+
+# App
+streamlit==1.37.1
+
+# Utilities
+python-dotenv==1.0.1
+tqdm==4.66.4
