@@ -183,8 +183,8 @@ Output format:
 ```
 Dataset size             :      500
 FAISS index dimension    :      384
-Avg retrieval latency    :    12.3 ms
-Precision@5 (avg)        :    0.880
-Category diversity score :    0.760
-Recency exclusion rate   :    0.823
+Avg retrieval latency    :   462.4 ms
+Precision@5 (avg)        :    0.900
+Category diversity score :    0.440
+Recency exclusion rate   :    0.974
 ```
