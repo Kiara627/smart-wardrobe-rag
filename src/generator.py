@@ -125,23 +125,22 @@ _flan_pipeline = None   # module-level cache to avoid reloading the model
 
 
 def _get_flan_pipeline():
-    """Lazy-load flan-t5-base pipeline (cached after first call)."""
+    """Lazy-load flan-t5-base tokenizer+model (cached after first call)."""
     global _flan_pipeline
     if _flan_pipeline is None:
         try:
-            from transformers import pipeline as hf_pipeline
+            import torch
+            from transformers import T5ForConditionalGeneration, T5Tokenizer
         except ImportError as exc:
             raise ImportError(
                 "transformers package not installed. Run: pip install transformers"
             ) from exc
 
         print("Loading google/flan-t5-base (this may take a moment on first run) ...")
-        _flan_pipeline = hf_pipeline(
-            "text2text-generation",
-            model="google/flan-t5-base",
-            max_new_tokens=256,
-            do_sample=False,
-        )
+        tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-base")
+        model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-base")
+        model.eval()
+        _flan_pipeline = {"tokenizer": tokenizer, "model": model}
         print("flan-t5-base loaded.")
     return _flan_pipeline
 
@@ -164,7 +163,11 @@ def _generate_flan(query: str, items: list[dict[str, Any]]) -> str:
     str
         Generated recommendation text (shorter than OpenAI output).
     """
+    import torch
+
     pipe = _get_flan_pipeline()
+    tokenizer = pipe["tokenizer"]
+    model = pipe["model"]
 
     # Flan-T5 works best with an explicit instruction prefix
     context = _format_items(items)
@@ -177,8 +180,10 @@ def _generate_flan(query: str, items: list[dict[str, Any]]) -> str:
     # Truncate to ~450 tokens worth of characters (rough heuristic)
     prompt = prompt[:1800]
 
-    result = pipe(prompt)
-    return result[0]["generated_text"].strip()
+    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
+    with torch.no_grad():
+        outputs = model.generate(**inputs, max_new_tokens=200, do_sample=False)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
 
 
 # ---------------------------------------------------------------------------
